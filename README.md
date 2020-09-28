@@ -21,3 +21,7 @@ from those positions into mouse movement values.
 
 ## Running
 * Type make.  It should just run (in Linux)
+
+## Using in your own project
+* Copy radterpolate.cpp and .h to your project folder, for now.
+* See main.cpp for example use
