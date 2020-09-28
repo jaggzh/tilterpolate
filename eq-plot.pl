@@ -1,4 +1,6 @@
 #!/usr/bin/perl
+# Prototype code in perl.
+# It's old and not functional.  The working code is in .c (main.c right now)
 use strict; use warnings;
 use 5.023;
 
@@ -95,7 +97,12 @@ say "plot ", join(" + ", map {"($_)"} @terms);
 # denominator should be 1 at x=xterm
 #  (OR numerator and denominator should be 0 at x=xterm)
 # numerator should be 0 at x=xother_term
-#                   x==1 ? 1
+# The following experiments were attempts at figuring out a way
+# to generate an equation with one term for each value (a sort of curve fit, without
+# any iteration and with fixed points exactly-specified).
+# I gave up on this idea anyway, because the interpolation would result in
+# mouse move values that were unreasonable for the user with accessibility issues.
+# Broken test equations follow:
 	#               (1-(x-x1)) * (1-(x-x1)(x-x2)(x-x3))                    (x-x1) * (x-x3)
 	#   y1 * ------------------------------------------ +  y2 * ------------------------------- + ....
 	#                (1-(x-x1))                                    (1-((x-x1) * (x-x2) * (x-x3))

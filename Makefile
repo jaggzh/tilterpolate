@@ -7,6 +7,8 @@ vi:
 	vim \
 		Makefile \
 		main.c \
+		termstuff.c \
+		termstuff.h \
 		linfit.c \
 		eq-plot.pl \
 		data-samples/sample-test.txt \
@@ -21,8 +23,8 @@ linfit-run: linfit
 clean:
 	rm linfit
 
-linfit: linfit.c main.c
-	g++ -ggdb3 -Wall -pedantic -o linfit main.c linfit.c
+linfit: linfit.c main.c termstuff.c
+	g++ -ggdb3 -Wall -pedantic -o linfit main.c linfit.c termstuff.c
 
 eq-plot-perl-run:
 	./eq-plot.pl
