@@ -1,6 +1,14 @@
 #ifndef TERMSTUFF_H
 #define TERMSTUFF_H
 
+// Usage: Call init() to unbuffer output. Then do stuff.
+// currently init() also sets input to unbuffered and no echo too...
+// and sets an atexit() to restore it. Good luck.
+
+extern int statuslines;
+
+void gotostatus(int i); // 0 is bottom status row, 1 is next up.
+
 void init(); // call me to set buf to nothing
 void cls();  // clear screen
 void gotoxy(int x, int y);      // 1,1 is top left

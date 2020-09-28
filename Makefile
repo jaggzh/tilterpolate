@@ -1,3 +1,5 @@
+BIN=radterp
+
 default: run
 
 v:
@@ -6,7 +8,10 @@ v:
 vi:
 	vim \
 		Makefile \
-		main.c \
+		README.md \
+		main.cpp \
+		radterpolate.cpp \
+		radterpolate.h \
 		termstuff.c \
 		termstuff.h \
 		linfit.c \
@@ -15,16 +20,16 @@ vi:
 		data-samples/sample1.txt \
 		data-samples/sample2.txt
 
-run: linfit-run
+run: $(BIN)-run
 
-linfit-run: linfit
-	./linfit
+$(BIN)-run: $(BIN)
+	./$(BIN)
 
 clean:
-	rm linfit
+	rm $(BIN)
 
-linfit: linfit.c main.c termstuff.c
-	g++ -ggdb3 -Wall -pedantic -o linfit main.c linfit.c termstuff.c
+$(BIN): main.cpp radterpolate.cpp termstuff.c
+	g++ -ggdb3 -Wall -pedantic -o $(BIN) main.cpp radterpolate.cpp termstuff.c
 
 eq-plot-perl-run:
 	./eq-plot.pl

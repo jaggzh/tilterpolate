@@ -3,23 +3,34 @@
 #include <termios.h>    // termios stuff
 #include <sys/ioctl.h> // for STDIN_FILENO
 #include <unistd.h>    // ioctl()
+//#include <signal.h>    // for signal, to catch the window size change (unused)
+// https://man7.org/tlpi/code/online/dist/tty/demo_SIGWINCH.c.html
 
-#include "termstuff.h"
+//#include "termstuff.h"
 
 int tcols=80, trows=24;
+/* If you want room for a status line...
+   Set to at least 2 for now.  This is because I don't feel like
+   handling the halving of the screen properly
+   You can set this in your caller, at any time, and any new draws
+   will use it in the calculations.
+*/
 int statuslines=0;
 
 void cls() { printf("\033[2J"); }
 void gotoxy(int x, int y) {
-	printf("\033[%d;%dH", y+1, x+1);
+	printf("\033[%d;%dH", y, x);
 }
 void pat(char c, int x, int y) {
 	printf("\033[%d;%dH%c", y, x, c);
 }
 
+// 0 is bottom status row, 1 is next up.
+void gotostatus(int i) { gotoxy(1, trows-i); }
+
 void cgotoxy(float x, float y) { // 0,0 is middle, 1 is up, -1 is left
 	int cx = (tcols)/2, cy=(trows-statuslines)/2;
-	gotoxy(cx + x*cx, cy - y*cy);
+	gotoxy(cx + x*cx + 1, cy - y*cy +1);
 }
 void cpat(char c, float x, float y) { // 0,0 is middle, 1 is up, -1 is left
 	cgotoxy(x, y);
