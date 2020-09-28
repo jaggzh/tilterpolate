@@ -1,6 +1,8 @@
 ## Interpolate from two sensor values (gyrox,gyroy) into mouse (x,y) space.
 by jaggz.h who is at gmail.com, 2020-09-28
 
+See: [Youtube Demo](https://www.youtube.com/watch?v=sYNi_wDB9Zw)
+
 ![Interpolation algorithm/explanation](tri-angle-interpolation-sort-of.png "Interpolation algorithm/explanation")
 
 ## Background
