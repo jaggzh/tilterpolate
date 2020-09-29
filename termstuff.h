@@ -9,8 +9,10 @@ extern int statuslines;
 
 void gotostatus(int i); // 0 is bottom status row, 1 is next up.
 
-void init(); // call me to set buf to nothing
+void term_init(); // call me to set buf to nothing
 void cls();  // clear screen
+
+// Standard 1-cols, 1-rows ANSI stuff
 void gotoxy(int x, int y);      // 1,1 is top left
 void pat(char c, int x, int y); // print at
 

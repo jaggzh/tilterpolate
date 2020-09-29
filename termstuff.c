@@ -74,7 +74,7 @@ void term_reset(void) { /* Restore old terminal i/o settings */
     tcsetattr(0, TCSANOW, &old);
 }
 
-void init() {
+void term_init() {
 	setbuf(stdout, NULL); // unbuffy
 	gettermsize();
 	term_icanon(0);

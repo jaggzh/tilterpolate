@@ -9,7 +9,7 @@ enum { T_LEFT, T_RIGHT, T_UP, T_DOWN };
 
 #define POINTS 4
 #ifndef _IN_RADTERPOLATE_C
-extern const char **cnames[POINTS+4]; // "T_LEFT", "T_RIGHT", "T_UP", "T_DOWN", "oof!"
+extern const char **cnames[POINTS+1]; // "T_LEFT", "T_RIGHT", "T_UP", "T_DOWN", "oof!"
 #endif
 
 #define R2D(r) ((r)*180/M_PI)
@@ -26,6 +26,7 @@ class fPair {
 		float x,y;
 		fPair() { x=y=0; }
 		fPair(float sx, float sy) { x=sx, y=sy; }
+		void set(float sx, float sy) { x=sx, y=sy; }
 };
 
 class mPoint { // mPoint with mapping info
@@ -83,11 +84,19 @@ public:
 			points[i].set(0,0,0,0);
 		}
 	}
+
+	void set_left(fPair p)  { points[T_LEFT].set(p.x, p.y, -1, 0); }
+	void set_right(fPair p) { points[T_RIGHT].set(p.x, p.y, 1, 0); }
+	void set_up(fPair p)    { points[T_UP].set(p.x, p.y, 0, 1); }
+	void set_down(fPair p)  { points[T_DOWN].set(p.x, p.y, 0, -1); }
+	void set_center(fPair p)  { center.set(p.x, p.y, 0, 0); }
+
 	void set_left(float x, float y)  { points[T_LEFT].set(x, y, -1, 0); }
 	void set_right(float x, float y) { points[T_RIGHT].set(x, y, 1, 0); }
 	void set_up(float x, float y)    { points[T_UP].set(x, y, 0, 1); }
 	void set_down(float x, float y)  { points[T_DOWN].set(x, y, 0, -1); }
 	void set_center(float x, float y)  { center.set(x, y, 0, 0); }
+
 	void print(void) {
 		printf("values...\n");
 		for (int i=0; i<POINTS; i++) {
