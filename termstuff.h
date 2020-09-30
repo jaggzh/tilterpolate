@@ -6,6 +6,7 @@
 // and sets an atexit() to restore it. Good luck.
 
 extern int statuslines;
+extern int tcols, trows;
 
 void gotostatus(int i); // 0 is bottom status row, 1 is next up.
 
@@ -24,5 +25,8 @@ void draw_axii();
 // Term stuff
 void term_icanon(int echo); // set raw input
 void term_reset(void); // Restore old terminal i/o settings
+
+// Colors
+char *rgb24bg_f(float r, float g, float b); // 0-1.0 -> 24bit *color code string
 
 #endif

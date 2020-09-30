@@ -3,10 +3,18 @@
 #include <termios.h>    // termios stuff
 #include <sys/ioctl.h> // for STDIN_FILENO
 #include <unistd.h>    // ioctl()
-//#include <signal.h>    // for signal, to catch the window size change (unused)
+#include <signal.h>    // for signal, to catch the window size change
+
+#define FILE_SAVE_PAIRS "data/pairs.txt"
+// rotating static buffers, per function, for color codes
+#define TERM_STATIC_BUFFERS 10
+
 // https://man7.org/tlpi/code/online/dist/tty/demo_SIGWINCH.c.html
 
 //#include "termstuff.h"
+//
+
+int term_init_winch=1;  // Set to 0 before calling term_init() to disable
 
 int tcols=80, trows=24;
 /* If you want room for a status line...
@@ -37,7 +45,7 @@ void cpat(char c, float x, float y) { // 0,0 is middle, 1 is up, -1 is left
 	fputc(c, stdout);
 }
 void draw_axii() {
-	for (float x=-1; x<=1; x+=.01) {
+	for (float x=-1; x<=1; x+=.005) {
 		cpat('-', x, 0);
 		cpat('|', 0, x);
 	}
@@ -74,9 +82,38 @@ void term_reset(void) { /* Restore old terminal i/o settings */
     tcsetattr(0, TCSANOW, &old);
 }
 
+void sigwinch_handler(int sig) {
+	gettermsize();
+}
+
+void set_winch() {
+	struct sigaction sa;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sa.sa_handler = sigwinch_handler;
+	if (sigaction(SIGWINCH, &sa, NULL) == -1) {
+		perror("sigaction() from termstuff.c");
+		exit(1);
+	}
+}
+
+char *rgb24bg_f(float r, float g, float b) {
+	static char code[TERM_STATIC_BUFFERS][23];
+	static int bi=0;
+	// pre-increment instead of post. we end up starting at 1 but .. whatever
+	bi = bi<TERM_STATIC_BUFFERS-1 ? bi+1 : 0;
+	if (r<0) r=0; if (g<0) g=0; if (b<0) b=0;             // chop little vals
+	if (r>1.0) r=1.0; if (g>1.0) g=1.0; if (b>1.0) b=1.0; // chop big vals
+	sprintf(code[bi], "\033[48;2;%d;%d;%dm", int(r*255), int(g*255), int(b*255));
+	return code[bi];
+}
+
 void term_init() {
 	setbuf(stdout, NULL); // unbuffy
 	gettermsize();
 	term_icanon(0);
 	atexit(term_reset);
+	if (term_init_winch) {
+		set_winch();
+	}
 }

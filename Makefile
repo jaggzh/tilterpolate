@@ -24,6 +24,7 @@ run: $(BIN)-run
 
 $(BIN)-run: $(BIN)
 	./$(BIN)
+	#./$(BIN) & echo "attach $!; break main.cpp 70" > .gdbinit; fg
 
 clean:
 	rm $(BIN)
