@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 			printf("pid[%d] Center: %d,%d  Point: %d,%d   ",
 					getpid(),
 					int(PTCENTER.x), int(PTCENTER.y),
-					int(PTPOINT.x), int(PTPOINT.y),
+					int(PTPOINT.x), int(PTPOINT.y)
 					);
 			gotostatus(1);
 		#endif

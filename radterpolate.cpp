@@ -87,7 +87,7 @@ fPair Radterpolator::interp(mPoint p) { /* !! prep() must be run after setting p
 			p2 = sorted[0];
 			//p2.anglec -= 2*M_PI;
 			p2.anglec -= 2*M_PI;
-			if (p.anglec > 0) p.anglec -= 2*M_PI;
+			if (p.anglec > sorted[0].anglec) p.anglec -= 2*M_PI;
 		}
 		verb_printf(" p1a:%.3f <= ", R2D(p1.anglec));
 		verb_printf("%.3f < ", R2D(p.anglec));
