@@ -4,7 +4,7 @@
 #include "termstuff.h"
 #include "radterpolate.h"
 
-#define SHOW_FS_FIELD // show full screen field? (uncomment for no)
+/* #define SHOW_FS_FIELD // show full screen field? (uncomment for no) */
 
 #define MOVEINC 10
 
@@ -69,7 +69,7 @@ void plot_field(Radterpolator *mousep, float mr, bool showx, bool showy) {
 			res = mousep->interp(x, y);
 			cgotoxy(x/mr, y/mr);
 
-			char *bgx, *bgy;
+			const char *bgx, *bgy;
 			bgx=bgy="\033[40m";
 			if (res.x < -1.0)      bgx=rgb24bg_f( .8, .3, .0); 
 			else if (res.x > 1.0)  bgx=rgb24bg_f( .8, .0, .4); 
@@ -79,7 +79,8 @@ void plot_field(Radterpolator *mousep, float mr, bool showx, bool showy) {
 			else {                 bgy=rgb24bg_f(  0, abs(res.y)*.8, 0); }
 			if (showx) printf("%s\033[37m%2d", bgx, int(fminf(res.x,.9)*10));
 			if (showy) printf("%s\033[32m%2d", bgy, int(fminf(res.y,.9)*10));
-			printf("\n");
+			printf(" ");
+			/* printf("\n"); */
 		}
 	}
 	printf("\033[0m");
@@ -93,13 +94,6 @@ int main(int argc, char *argv[]) {
 	#ifdef SHOW_FS_FIELD
 		float mr=310; // max range (to scale for plotting)
 	#endif
-	// Good test set
-	ptpairs[T_LEFT].set(-300, 20);
-	ptpairs[T_RIGHT].set(-200, 200);
-	ptpairs[T_DOWN].set(10, -300);
-	ptpairs[T_UP].set(100, 100);
-	ptpairs[OT_CENTER].set(50, 50);
-	ptpairs[OT_POINT].set(-290, 40);
 
 	// Normal'ish person test set
 	ptpairs[T_LEFT].set(-250, 55);
@@ -109,28 +103,41 @@ int main(int argc, char *argv[]) {
 	ptpairs[OT_CENTER].set(40, -60);
 	ptpairs[OT_POINT].set(-101, -59);
 
+	// Example disabled use: L,R,Up,Center are normal'ish. Down is near Up
+	ptpairs[T_LEFT].set(-250, 55);
+	ptpairs[T_RIGHT].set(250, 30);
+	ptpairs[T_DOWN].set(-70, 170);
+	ptpairs[T_UP].set(-20, 200);
+	ptpairs[OT_CENTER].set(30, -100);
+	ptpairs[OT_POINT].set(200, -45);
+
 	update_radterp_system(&mouse, ptpairs);
 
 	statuslines=3;
-	term_init();    // We init even if SHOW_FS_FIELD is not defined
+
+	// We init the term even if we're not showing the vector'ish field
+	// (ie. even if SHOW_FS_FIELD is not defined), because we still take
+	// input
+	term_init_with_flags(TERMF_DEFAULTS | TERMF_CLS_ON_WINCH);
 	                // so we can take user menu selections
 
 	cur_pointi = OT_POINT;
+	cls();
 	while (1) {
 		fPair res;
 		#ifdef SHOW_FS_FIELD
-			cls();
+			//cls();
 			plot_field(&mouse, mr, showx, showy);
 			draw_axii();
 			gotostatus(2);
-			printf("pid[%d] Center: %d,%d  Point: %d,%d",
+			printf("pid[%d] Center: %d,%d  Point: %d,%d   ",
 					getpid(),
 					int(PTCENTER.x), int(PTCENTER.y),
-					int(PTPOINT.x), int(PTPOINT.y)
+					int(PTPOINT.x), int(PTPOINT.y),
 					);
 			gotostatus(1);
 		#endif
-		printf("Currently moving: \033[33;1m%s\033[0m\n", pt_humanlabels[cur_pointi]);
+		printf("Currently moving: \033[33;1m%s\033[0m   \n", pt_humanlabels[cur_pointi]);
 		#ifdef SHOW_FS_FIELD
 			gotostatus(0);
 		#endif

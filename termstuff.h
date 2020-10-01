@@ -1,16 +1,26 @@
 #ifndef TERMSTUFF_H
 #define TERMSTUFF_H
 
-// Usage: Call init() to unbuffer output. Then do stuff.
-// currently init() also sets input to unbuffered and no echo too...
-// and sets an atexit() to restore it. Good luck.
+// Usage: Call term_init().
+// By default It will disable output buffering and enable unbuffered input
+// (and no echo).
+// It also sets an atexit() to restore it. Good luck.
 
 extern int statuslines;
 extern int tcols, trows;
 
+// FLAGS.  Ones marked LIVE can be set any time
+#define TERMF_WINCH          1  // Catch window change size
+#define TERMF_CLS_ON_WINCH   2  // [LIVE] cls() on window size change
+#define TERMF_DEFAULTS (TERMF_WINCH)
+
 void gotostatus(int i); // 0 is bottom status row, 1 is next up.
 
-void term_init(); // call me to set buf to nothing
+void term_init(); // call me!  Will disable output buffering
+void term_init_with_flags(int flags);
+void term_enable_flag(int flag);
+void term_disable_flag(int flag);
+
 void cls();  // clear screen
 
 // Standard 1-cols, 1-rows ANSI stuff

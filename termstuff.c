@@ -11,10 +11,9 @@
 
 // https://man7.org/tlpi/code/online/dist/tty/demo_SIGWINCH.c.html
 
-//#include "termstuff.h"
-//
+#include "termstuff.h"
 
-int term_init_winch=1;  // Set to 0 before calling term_init() to disable
+int term_flags=TERMF_DEFAULTS;
 
 int tcols=80, trows=24;
 /* If you want room for a status line...
@@ -84,6 +83,7 @@ void term_reset(void) { /* Restore old terminal i/o settings */
 
 void sigwinch_handler(int sig) {
 	gettermsize();
+	if (term_flags & TERMF_CLS_ON_WINCH) cls();
 }
 
 void set_winch() {
@@ -108,12 +108,14 @@ char *rgb24bg_f(float r, float g, float b) {
 	return code[bi];
 }
 
+void term_init_with_flags(int flags) {  term_flags=flags;  term_init();  }
+void term_enable_flag(int flag) { term_flags |= flag; }
+void term_disable_flag(int flag) { term_flags = term_flags & ~flag; }
+
 void term_init() {
 	setbuf(stdout, NULL); // unbuffy
 	gettermsize();
 	term_icanon(0);
 	atexit(term_reset);
-	if (term_init_winch) {
-		set_winch();
-	}
+	if (term_flags & TERMF_WINCH) set_winch();
 }

@@ -8,13 +8,13 @@
 const char *cnames[POINTS+1] = { "T_LEFT", "T_RIGHT", "T_UP", "T_DOWN", "oof!" };
 
 void Radterpolator::prep(void) {
-	#if defined(TILT_VERBOSE) && TILT_VERBOSE > 0
+	#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 		printf("pid[%d] Center: %f, %f\n", getpid(), center.x, center.y);
 	#endif
 	for (int i=0; i<POINTS; i++) {
 		mPoint origin(0,0);
 		// Set sorted array to points offset around CENTER
-		#if defined(TILT_VERBOSE) && TILT_VERBOSE > 0
+		#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 			printf("mPoint orig [%d](%s) (xy: %.3f, %.3f)\n",
 				i, cnames[i], points[i].x, points[i].y);
 		#endif
@@ -27,7 +27,7 @@ void Radterpolator::prep(void) {
 				);
 		sorted[i].set_angle_to(origin); // we're offset now so we can use 0,0
 		sorted[i].calc_scalers();
-		#if defined(TILT_VERBOSE) && TILT_VERBOSE > 0
+		#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 			printf("  offset -> [%d](%s) (xy: %.3f, %.3f) Angle: %.3f (mx,y: %.2f, %.2f)\n",
 				i, cnames[i], sorted[i].x, sorted[i].y,
 				R2D(sorted[i].anglec),
@@ -35,13 +35,13 @@ void Radterpolator::prep(void) {
 				);
 		#endif
 	}
-	#if defined(TILT_VERBOSE) && TILT_VERBOSE > 0
+	#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 		printf("Unsorted:\n");
 		print_points(sorted);
 	#endif
 	std::sort(sorted, sorted+POINTS, sort_angle);
 
-	#if defined(TILT_VERBOSE) && TILT_VERBOSE > 0
+	#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 		printf("Sorted:\n");
 		print_points(sorted);
 	#endif

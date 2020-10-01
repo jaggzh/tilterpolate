@@ -29,8 +29,17 @@ $(BIN)-run: $(BIN)
 clean:
 	rm $(BIN)
 
-$(BIN): main.cpp radterpolate.cpp termstuff.c
+$(BIN): main.cpp radterpolate.cpp radterpolate.h termstuff.c termstuff.h
 	g++ -ggdb3 -Wall -pedantic -o $(BIN) main.cpp radterpolate.cpp termstuff.c
+
+field: main.cpp radterpolate.cpp radterpolate.h termstuff.c termstuff.h
+	g++ -ggdb3 -D SHOW_FS_FIELD -Wall -pedantic -o $(BIN) main.cpp radterpolate.cpp termstuff.c
+	./radterp
+
+debug: main.cpp radterpolate.cpp radterpolate.h termstuff.c termstuff.h
+	g++ -ggdb3 -D RAD_VERBOSE=2 -Wall -pedantic -o $(BIN) main.cpp radterpolate.cpp termstuff.c
+	./radterp
+
 
 eq-plot-perl-run:
 	./eq-plot.pl

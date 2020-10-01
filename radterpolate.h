@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 
-/* #define TILT_VERBOSE 2 // lots of stuff to enjoy. Undefined or 0 is off */
+/* #define RAD_VERBOSE 2 // lots of stuff to enjoy. Undefined or 0 is off */
 
 enum { T_LEFT, T_RIGHT, T_UP, T_DOWN };
 
@@ -15,7 +15,7 @@ extern const char **cnames[POINTS+1]; // "T_LEFT", "T_RIGHT", "T_UP", "T_DOWN", 
 #define R2D(r) ((r)*180/M_PI)
 #define D2R(r) ((r)*M_PI/180)
 
-#if defined(TILT_VERBOSE) && TILT_VERBOSE > 0
+#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 	#define verb_printf(...) printf(__VA_ARGS__)
 #else
 	#define verb_printf(...)
