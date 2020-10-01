@@ -6,7 +6,8 @@
 
 /* #define SHOW_FS_FIELD // show full screen field? (uncomment for no) */
 
-#define MOVEINC 10
+#define SENSOR_MULT 20 // Scale values to match what your sensor might output
+#define MOVEINC 10*SENSOR_MULT // When moving in the test vector field
 
 // Extending radterpolate's types T_LEFT, etc...
 #define OT_POINT  (POINTS+0) // Our Type
@@ -104,12 +105,13 @@ int main(int argc, char *argv[]) {
 	ptpairs[OT_POINT].set(-101, -59);
 
 	// Example disabled use: L,R,Up,Center are normal'ish. Down is near Up
-	ptpairs[T_LEFT].set(-250, 55);
-	ptpairs[T_RIGHT].set(250, 30);
-	ptpairs[T_DOWN].set(-70, 170);
-	ptpairs[T_UP].set(-20, 200);
-	ptpairs[OT_CENTER].set(30, -100);
-	ptpairs[OT_POINT].set(200, -45);
+	mr *= SENSOR_MULT;
+	ptpairs[T_LEFT].set(-250*SENSOR_MULT, 55*SENSOR_MULT);
+	ptpairs[T_RIGHT].set(250*SENSOR_MULT, 30*SENSOR_MULT);
+	ptpairs[T_DOWN].set(-70*SENSOR_MULT, 170*SENSOR_MULT);
+	ptpairs[T_UP].set(-20*SENSOR_MULT, 200*SENSOR_MULT);
+	ptpairs[OT_CENTER].set(30*SENSOR_MULT, -100*SENSOR_MULT);
+	ptpairs[OT_POINT].set(200*SENSOR_MULT, -45*SENSOR_MULT);
 
 	update_radterp_system(&mouse, ptpairs);
 
@@ -121,7 +123,7 @@ int main(int argc, char *argv[]) {
 	term_init_with_flags(TERMF_DEFAULTS | TERMF_CLS_ON_WINCH);
 	                // so we can take user menu selections
 
-	cur_pointi = OT_POINT;
+	cur_pointi = T_LEFT;
 	cls();
 	while (1) {
 		fPair res;

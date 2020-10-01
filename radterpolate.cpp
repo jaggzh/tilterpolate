@@ -85,7 +85,6 @@ fPair Radterpolator::interp(mPoint p) { /* !! prep() must be run after setting p
 		} else {  // <---------- last point means a jump from lowest angle back to highest
 			verb_printf("  \033[33;1m*[FLIP] P1[%d], P2[%d]\033[0m\n", i, 0);
 			p2 = sorted[0];
-			//p2.anglec -= 2*M_PI;
 			p2.anglec -= 2*M_PI;
 			if (p.anglec > sorted[0].anglec) p.anglec -= 2*M_PI;
 		}
