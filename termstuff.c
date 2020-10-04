@@ -25,6 +25,7 @@ int tcols=80, trows=24;
 int statuslines=0;
 
 void cls() { printf("\033[2J"); }
+void rst() { printf("\033[0m"); }
 void gotoxy(int x, int y) {
 	printf("\033[%d;%dH", y, x);
 }
@@ -102,8 +103,12 @@ char *rgb24bg_f(float r, float g, float b) {
 	static int bi=0;
 	// pre-increment instead of post. we end up starting at 1 but .. whatever
 	bi = bi<TERM_STATIC_BUFFERS-1 ? bi+1 : 0;
-	if (r<0) r=0; if (g<0) g=0; if (b<0) b=0;             // chop little vals
-	if (r>1.0) r=1.0; if (g>1.0) g=1.0; if (b>1.0) b=1.0; // chop big vals
+	if (r<0) r=0;
+	if (g<0) g=0;
+	if (b<0) b=0;             // chop little vals
+	if (r>1.0) r=1.0;
+	if (g>1.0) g=1.0;
+	if (b>1.0) b=1.0; // chop big vals
 	sprintf(code[bi], "\033[48;2;%d;%d;%dm", int(r*255), int(g*255), int(b*255));
 	return code[bi];
 }

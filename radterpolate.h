@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 
-/* #define RAD_VERBOSE 2 // lots of stuff to enjoy. Undefined or 0 is off */
+#define RAD_VERBOSE 2 // lots of stuff to enjoy. Undefined or 0 is off
 
 enum { T_LEFT, T_RIGHT, T_UP, T_DOWN };
 
@@ -54,6 +54,7 @@ class mPoint { // mPoint with mapping info
 			map_to_x=destx; map_to_y=desty;
 		}
 		void set_label(const char *s) { label=s; }
+		void set(float posx, float posy) { x=posx; y=posy; }
 		void set(float posx, float posy, float destx, float desty,
 		         const char *slabel)
 			{ x=posx; y=posy; map_to_x=destx; map_to_y=desty; label=slabel; }

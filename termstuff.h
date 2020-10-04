@@ -22,6 +22,7 @@ void term_enable_flag(int flag);
 void term_disable_flag(int flag);
 
 void cls();  // clear screen
+void rst();  // clear colors
 
 // Standard 1-cols, 1-rows ANSI stuff
 void gotoxy(int x, int y);      // 1,1 is top left

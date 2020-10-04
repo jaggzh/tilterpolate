@@ -6,13 +6,13 @@
 #include "radterpolate.h"
 
 const char *cnames[POINTS+1] = { "T_LEFT", "T_RIGHT", "T_UP", "T_DOWN", "oof!" };
+mPoint origin(0,0);
 
 void Radterpolator::prep(void) {
 	#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 		printf("pid[%d] Center: %f, %f\n", getpid(), center.x, center.y);
 	#endif
 	for (int i=0; i<POINTS; i++) {
-		mPoint origin(0,0);
 		// Set sorted array to points offset around CENTER
 		#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 			printf("mPoint orig [%d](%s) (xy: %.3f, %.3f)\n",
@@ -67,7 +67,8 @@ fPair Radterpolator::interp(mPoint p) { /* !! prep() must be run after setting p
 						   be unhappy */
 	fPair ret;
 	verb_printf("Interpolating:\n");
-	p.set_angle_to(center);
+	p.set(p.x - center.x, p.y - center.y);
+	p.set_angle_to(origin); // we're offset so we go to 0,0
 	verb_printf(" Center x,  y: [%.2f, %.2f]\n", center.x, center.y);
 	verb_printf(" Point  x,  y: [%.2f, %.2f]\n", p.x, p.y);
 	//verb_printf(" Point dx, dy: [%.2f, %.2f]\n", p.x-center.x, p.y-center.y);
