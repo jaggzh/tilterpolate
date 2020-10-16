@@ -32,8 +32,10 @@ clean:
 $(BIN): main.cpp radterpolate.cpp radterpolate.h termstuff.c termstuff.h
 	g++ -ggdb3 -Wall -pedantic -o $(BIN) main.cpp radterpolate.cpp termstuff.c
 
-field: main.cpp radterpolate.cpp radterpolate.h termstuff.c termstuff.h
+field_build:
 	g++ -ggdb3 -D SHOW_FS_FIELD -Wall -pedantic -o $(BIN) main.cpp radterpolate.cpp termstuff.c
+
+field: field_build
 	./radterp
 
 debug: main.cpp radterpolate.cpp radterpolate.h termstuff.c termstuff.h

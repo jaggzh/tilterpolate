@@ -46,21 +46,6 @@ const char *pt_humanlabels[OT_CNT+1] = {
 };
 
 int which_easer=0;
-#define MAX_EASER 3
-typedef float (*ease_ptr)(float);
-ease_ptr easers[] = {
-	+[](float t) { return t; },
-	+[](float t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t; },
-	+[](float t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1; },
-	+[](float t) { return t<.5 ? 8*t*t*t*t : 1-8*powf(t-1,4); },
-	+[](float t) { return t<.5 ? 16*t*t*t*t*t : 1+16*powf(t-1,5); }
-};
-float ease_wrapper(int choice, float val) {
-	float res;
-	if (val<-1 || val>1) return val;
-	res = (easers[choice])(abs(val));
-	return val<0 ? -res : res;
-}
 
 void update_radterp_system(Radterpolator *mousep, fPair *ptpairs) {
 	//printf("\n\033[41;37;1mSetting left %f\033[0m\n", ptpairs[T_LEFT].x);
@@ -122,10 +107,6 @@ void plot_field(Radterpolator *mousep, bool showx, bool showy, fPair ranges, fPa
 		for (float x=mins.x; x<maxs.x - xstep; x += xstep) {
 			fPair res;
 			res = mousep->interp(x, y);
-			if (1) {
-				res.x = ease_wrapper(which_easer, res.x);
-				res.y = ease_wrapper(which_easer, res.y);
-			}
 			//cgotoxy(x/mr, y/mr);
 			gotorangedxy(x, y, mins, maxs);
 
@@ -187,7 +168,6 @@ int main(int argc, char *argv[]) {
 	int cur_pointi;
 	bool showx=true, showy=false;
 	bool auto_range=false;
-	bool func_pass=false;
 	fPair ranges;
 	fPair mins, maxs;
 	Radterpolator mouse;
@@ -307,7 +287,7 @@ int main(int argc, char *argv[]) {
 		gotostatus(1);
 		printf("(C)ls, <>shift x, (e)easer(%d). ",
 			which_easer
-			//func_pass ? "\033[36;1mon\033[0m" : "\033[31moff\033[0m"
+			//which_easer ? "\033[36;1mon\033[0m" : "\033[31moff\033[0m"
 			);
 		printf("Currently moving: \033[33;1m%s\033[0m\033[K", pt_humanlabels[cur_pointi]);
 		#ifdef SHOW_FS_FIELD
@@ -327,10 +307,6 @@ int main(int argc, char *argv[]) {
 		////////////////////////////
 		// \/  Interpolate here
 		res = mouse.interp(ptpairs[OT_POINT].x+test_offsetx, ptpairs[OT_POINT].y+test_offsety);
-		if (1 || func_pass) {
-			res.x = ease_wrapper(which_easer, res.x);
-			res.y = ease_wrapper(which_easer, res.y);
-		}
 		////////////////////////////
 		////////////////////////////
 
@@ -356,7 +332,11 @@ int main(int argc, char *argv[]) {
 			else if (c=='<') test_offsetx -= 10, pchange=true;
 			else if (c=='e') {
 				which_easer++;
-				if (which_easer > MAX_EASER) which_easer=0;
+				// Enable easing. If it fails (lib sets to max), set it to 0
+				if (mouse.enable_easing(which_easer)) {
+					which_easer = 0;
+					mouse.enable_easing(0);
+				}
 				pchange=true;
 			} else if (c=='c') cls(), pchange=true;
 			//else if (c=='s') save_pairs(ptpairs); // maybe later

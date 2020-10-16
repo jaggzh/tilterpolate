@@ -8,6 +8,13 @@
 const char *cnames[POINTS+1] = { "T_LEFT", "T_RIGHT", "T_UP", "T_DOWN", "oof!" };
 mPoint origin(0,0);
 
+ease_ptr _easers[] = {
+	+[](float t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t; },
+	+[](float t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1; },
+	+[](float t) { return t<.5 ? 8*t*t*t*t : 1-8*powf(t-1,4); },
+	+[](float t) { return t<.5 ? 16*t*t*t*t*t : 1+16*powf(t-1,5); }
+};
+
 void Radterpolator::prep(void) {
 	#if defined(RAD_VERBOSE) && RAD_VERBOSE > 0
 		printf("pid[%d] Center: %f, %f\n", getpid(), center.x, center.y);
@@ -59,16 +66,17 @@ char Radterpolator::enable_easing(unsigned char level) {
 			level = MAX_EASE_LEVEL;
 			rc = 1; // Inform that they exceeded the max level
 		}
-		_easefn = easers[level-1];
+		_easelevel = level;
+		_easefn = _easers[level-1];
 	}
-	return rc
+	return rc;
 }
 
 float Radterpolator::ease_stepped(float val) {
 	float res;
 	if (val<-1 || val>1) return val;
 	if (!_easelevel) return val;
-	res = (*_easefn)(val);
+	res = (*_easefn)(fabsf(val));
 	return val<0 ? -res : res;
 }
 
