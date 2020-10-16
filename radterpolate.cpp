@@ -49,6 +49,28 @@ void Radterpolator::prep(void) {
 void Radterpolator::print_points(mPoint *list) {
 	for (int i=0; i<POINTS; i++) list[i].print();
 }
+//
+// Caps the level for you, and returns 1 to inform. 0 on success
+char Radterpolator::enable_easing(unsigned char level) {
+	char rc=0;
+	if (!level) _easelevel = 0;
+	else {
+		if (level > MAX_EASE_LEVEL) {
+			level = MAX_EASE_LEVEL;
+			rc = 1; // Inform that they exceeded the max level
+		}
+		_easefn = easers[level-1];
+	}
+	return rc
+}
+
+float Radterpolator::ease_stepped(float val) {
+	float res;
+	if (val<-1 || val>1) return val;
+	if (!_easelevel) return val;
+	res = (*_easefn)(val);
+	return val<0 ? -res : res;
+}
 
 /*
 1. Get angles of Lines (L_1, L_2, L_p), ie. a_1, a_2, a_p
@@ -99,9 +121,10 @@ fPair Radterpolator::interp(mPoint p) { /* !! prep() must be run after setting p
 			verb_printf("  PRAD: %.2f\n", prad);
 			// don't forget: Angles decrease from p1 to p2
 			float angtot = p1.anglec - p2.anglec;
+			if (angtot == 0.0) angtot = .000001; // prevent divide by 0
 			verb_printf("  Angle difference p1-p: %.3f\n",(p1.anglec - p.anglec));
 			verb_printf("  Angle difference p-p2: %.3f\n",(p.anglec - p2.anglec));
-			float c1 = 1-(p1.anglec - p.anglec)/angtot;
+			float c1 = 1-(p1.anglec - p.anglec)/angtot;     // Contribution of this point [0,1.0]
 			float c2 = 1-((p.anglec - p2.anglec)/angtot);
 			verb_printf("  \033[36;1mContributions 1&2: %.3f, %.3f\033[0m\n", c1, c2);
 			verb_printf("p1,p2 scax: %.3f %.3f\n", p1.scalerx, p2.scalerx);
@@ -109,6 +132,10 @@ fPair Radterpolator::interp(mPoint p) { /* !! prep() must be run after setting p
 			ret.x = prad * (c2*p2.scalerx + c1*p1.scalerx);
 			ret.y = prad * (c2*p2.scalery + c1*p1.scalery);
 			verb_printf("   \033[33;1mFINAL mx,y: %.3f, %.3f\033[0m\n", ret.x, ret.y);
+			if (_easelevel) {
+				ret.x = ease_stepped(ret.x);
+				ret.y = ease_stepped(ret.y);
+			}
 			return ret;
 		}
 	}

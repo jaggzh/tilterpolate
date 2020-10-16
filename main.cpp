@@ -4,10 +4,11 @@
 #include "termstuff.h"
 #include "radterpolate.h"
 
+#define CURSOR_MOVE_PERC  .025
+
 //#define SHOW_FS_FIELD // show full screen field? (uncomment for no)
 
 #define SENSOR_MULT 1 // Scale values to match what your sensor might output
-#define MOVEINC 10*SENSOR_MULT // When moving in the test vector field
 
 // Extending radterpolate's types T_LEFT, etc...
 #define OT_POINT  (POINTS+0) // Our Type
@@ -29,7 +30,7 @@
 #define PSYMPOINT  pt_syms[OT_POINT]
 
 //#define CGOTOPOINT(p) cgotoxy(p.x/mr, p.y/mr)
-#define CGOTOPOINT(p) gotorangedxy(p.x+test_offsetx, p.y+test_offsety, mins, maxs)
+#define CGOTOPOINT(p) do { gotorangedxy(p.x+test_offsetx, p.y+test_offsety, mins, maxs); } while(0)
 
 #define PX (ptpairs[OT_POINT].x)
 #define PY (ptpairs[OT_POINT].y)
@@ -44,9 +45,26 @@ const char *pt_humanlabels[OT_CNT+1] = {
 	"Left", "Right", "Up", "Down", "User Point", "Center", NULL
 };
 
+int which_easer=0;
+#define MAX_EASER 3
+typedef float (*ease_ptr)(float);
+ease_ptr easers[] = {
+	+[](float t) { return t; },
+	+[](float t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t; },
+	+[](float t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1; },
+	+[](float t) { return t<.5 ? 8*t*t*t*t : 1-8*powf(t-1,4); },
+	+[](float t) { return t<.5 ? 16*t*t*t*t*t : 1+16*powf(t-1,5); }
+};
+float ease_wrapper(int choice, float val) {
+	float res;
+	if (val<-1 || val>1) return val;
+	res = (easers[choice])(abs(val));
+	return val<0 ? -res : res;
+}
+
 void update_radterp_system(Radterpolator *mousep, fPair *ptpairs) {
-	printf("\n\033[41;37;1mSetting left %f\033[0m\n", ptpairs[T_LEFT].x);
-	printf("\033[41;37;1mSetting right %f\033[0m\n", ptpairs[T_RIGHT].x);
+	//printf("\n\033[41;37;1mSetting left %f\033[0m\n", ptpairs[T_LEFT].x);
+	//printf("\033[41;37;1mSetting right %f\033[0m\n", ptpairs[T_RIGHT].x);
 	mousep->set_left(   ptpairs[T_LEFT]   );
 	mousep->set_right(  ptpairs[T_RIGHT]  );
 	mousep->set_down(   ptpairs[T_DOWN]   );
@@ -59,17 +77,39 @@ void gotorangedxy(float x, float y, fPair mins, fPair maxs) {
 	float nx, ny;
 	nx = ((x - mins.x) / (maxs.x - mins.x))*2 - 1;
 	ny = ((y - mins.y) / (maxs.y - mins.y))*2 - 1;
+	nx = fmaxf(fminf(nx, 1), -1); // don't go too far
+	ny = fmaxf(fminf(ny, 1), -1);
 	cgotoxy(nx, ny);
+}
+
+/*
+EasingFunctions = {
+  linear: function (t) { return t },
+  easeInQuad: function (t) { return t*t },
+  easeOutQuad: function (t) { return t*(2-t) },
+  easeInOutQuad: function (t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t },
+  easeInCubic: function (t) { return t*t*t },
+  easeOutCubic: function (t) { return (--t)*t*t+1 },
+  easeInOutCubic: function (t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1 },
+  easeInQuart: function (t) { return t*t*t*t },
+  easeOutQuart: function (t) { return 1-(--t)*t*t*t },
+  easeInOutQuart: function (t) { return t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t },
+  easeInQuint: function (t) { return t*t*t*t*t },
+  easeOutQuint: function (t) { return 1+(--t)*t*t*t*t },
+  easeInOutQuint: function (t) { return t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t }
+*/
+
+float funky(float in) {
+	return tanh(in*M_PI/1.5);
+	//return sqrt(fabsf(in)) * (in<0 ? -1 : 1);
 }
 
 // mr is the max range of values
 void plot_field(Radterpolator *mousep, bool showx, bool showy, fPair ranges, fPair mins, fPair maxs) {
-	#define FIELDX_STEP 37
-	#define FIELDY_STEP 7
-	#define FIELD_LBL_CHARS 6   // 4 chars + space
 	int lblchars=1;
 	if (showx) lblchars += 2;
 	if (showy) lblchars += 2;
+	//lblchars += 1;
 	float xcnt = ((float)tcols) / lblchars;
 	//float xrange = mr + mr*.9;
 	float xrange = maxs.x - mins.x;
@@ -82,20 +122,36 @@ void plot_field(Radterpolator *mousep, bool showx, bool showy, fPair ranges, fPa
 		for (float x=mins.x; x<maxs.x - xstep; x += xstep) {
 			fPair res;
 			res = mousep->interp(x, y);
+			if (1) {
+				res.x = ease_wrapper(which_easer, res.x);
+				res.y = ease_wrapper(which_easer, res.y);
+			}
 			//cgotoxy(x/mr, y/mr);
 			gotorangedxy(x, y, mins, maxs);
 
 			const char *bgx, *bgy;
 			bgx=bgy="\033[40m";
+			/// Coloring...
+#if 0
 			if (res.x < -1.0)      bgx=rgb24bg_f( .8, .3, .0); 
 			else if (res.x > 1.0)  bgx=rgb24bg_f( .8, .0, .4); 
 			else {                 bgx=rgb24bg_f( abs(res.x)*.8 , 0, 0); }
-			if (res.y < -1.0)      bgy=rgb24bg_f( .3, .8, .0); 
+			if (res.y < -1.0)      bgy=rgb24bg_f( .3, .8, .8); 
 			else if (res.y > 1.0)  bgy=rgb24bg_f( .0, .8, .4); 
 			else {                 bgy=rgb24bg_f(  0, abs(res.y)*.8, 0); }
-			if (showx) printf("%s\033[37m%2d", bgx, (int)(fminf(res.x,.9)*10));
-			if (showy) printf("%s\033[32m%2d", bgy, (int)(fminf(res.y,.9)*10));
-			printf(" ");
+#endif
+			if (res.x < -1.0)      bgx=rgb24bg_f( (abs(res.x)-1)*.7+.8, abs(res.x)*.7, .0); 
+			else if (res.x > 1.0)  bgx=rgb24bg_f( .8, abs(res.x)*.25, .1+abs(res.x)*.3); 
+			else {                 bgx=rgb24bg_f( abs(res.x)*.8 , 0, 0); }
+			if (res.y < 0.0)       bgy=rgb24bg_f( 0, abs(res.y), abs(res.y)*.3); 
+			else if (res.y > 1.0)  bgy=rgb24bg_f( 0, abs(res.y)*.8, abs(res.y)*.3); 
+			else                   bgy=rgb24bg_f( 0, abs(res.y)*.8, 0);
+
+			//if (showx) printf("%s\033[37m%2d", bgx, (int)(fminf(res.x,.9)*10));
+			//if (showy) printf("%s\033[32m%2d", bgy, (int)(fminf(res.y,.9)*10));
+			if (showx) printf("%s\033[37m%3d", bgx, (int)(res.x*10));
+			if (showy) printf("%s\033[32m%3d", bgy, (int)(res.y*10));
+			//printf("");
 			/* printf("\n"); */
 		}
 		printf("\033[0m\033[K");
@@ -130,7 +186,8 @@ void print_ranges(fPair mins, fPair maxs) {
 int main(int argc, char *argv[]) {
 	int cur_pointi;
 	bool showx=true, showy=false;
-	bool auto_range=true;
+	bool auto_range=false;
+	bool func_pass=false;
 	fPair ranges;
 	fPair mins, maxs;
 	Radterpolator mouse;
@@ -236,9 +293,7 @@ int main(int argc, char *argv[]) {
 					);
 			print_ranges(mins, maxs);
 			printf("  ");
-			gotostatus(1);
 		#endif
-		printf("Currently moving: \033[33;1m%s\033[0m\033[K", pt_humanlabels[cur_pointi]);
 		#ifdef SHOW_FS_FIELD
 			gotostatus(0);
 		#endif
@@ -249,6 +304,12 @@ int main(int argc, char *argv[]) {
 			showy ? "\033[36;1mon\033[0m" : "\033[31moff\033[0m",
 			auto_range ? "\033[36;1mon\033[0m" : "\033[31moff\033[0m"
 			);
+		gotostatus(1);
+		printf("(C)ls, <>shift x, (e)easer(%d). ",
+			which_easer
+			//func_pass ? "\033[36;1mon\033[0m" : "\033[31moff\033[0m"
+			);
+		printf("Currently moving: \033[33;1m%s\033[0m\033[K", pt_humanlabels[cur_pointi]);
 		#ifdef SHOW_FS_FIELD
 			for (int i=0; i<POINTS; i++) {
 				//cgotoxy(ptpairs[i].x/mr, ptpairs[i].y/mr);
@@ -263,8 +324,14 @@ int main(int argc, char *argv[]) {
 		#endif
 
 		////////////////////////////
+		////////////////////////////
 		// \/  Interpolate here
 		res = mouse.interp(ptpairs[OT_POINT].x+test_offsetx, ptpairs[OT_POINT].y+test_offsety);
+		if (1 || func_pass) {
+			res.x = ease_wrapper(which_easer, res.x);
+			res.y = ease_wrapper(which_easer, res.y);
+		}
+		////////////////////////////
 		////////////////////////////
 
 		#ifdef SHOW_FS_FIELD
@@ -274,18 +341,24 @@ int main(int argc, char *argv[]) {
 		char c;
 		bool pchange;
 		pchange = false;
+
 		if (read(0, &c, 1)) {
 			if (c=='q') break;
-			if (c=='h') ptpairs[cur_pointi].x -= ranges.x*.05, pchange=true;
-			else if (c=='l') ptpairs[cur_pointi].x += ranges.x*.05, pchange=true;
-			else if (c=='j') ptpairs[cur_pointi].y -= ranges.y*.05, pchange=true;
-			else if (c=='k') ptpairs[cur_pointi].y += ranges.y*.05, pchange=true;
+			if (c=='h') ptpairs[cur_pointi].x -= ranges.x*CURSOR_MOVE_PERC, pchange=true;
+			else if (c=='l') ptpairs[cur_pointi].x += ranges.x*CURSOR_MOVE_PERC, pchange=true;
+			else if (c=='j') ptpairs[cur_pointi].y -= ranges.y*CURSOR_MOVE_PERC, pchange=true;
+			else if (c=='k') ptpairs[cur_pointi].y += ranges.y*CURSOR_MOVE_PERC, pchange=true;
 			else if (c=='x') showx = !showx;
 			else if (c=='y') showy = !showy;
 			else if (c=='r') set_ranges_init(&ranges, &mins, &maxs, ptpairs);
 			else if (c=='a') auto_range = !auto_range;
 			else if (c=='>') test_offsetx += 10, pchange=true;
 			else if (c=='<') test_offsetx -= 10, pchange=true;
+			else if (c=='e') {
+				which_easer++;
+				if (which_easer > MAX_EASER) which_easer=0;
+				pchange=true;
+			} else if (c=='c') cls(), pchange=true;
 			//else if (c=='s') save_pairs(ptpairs); // maybe later
 			else {
 				for (int i=0; i<OT_CNT; i++) {

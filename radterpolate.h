@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define RAD_VERBOSE 2 // lots of stuff to enjoy. Undefined or 0 is off
+//#define RAD_VERBOSE 2 // lots of stuff to enjoy. Undefined or 0 is off
 
 enum { T_LEFT, T_RIGHT, T_UP, T_DOWN };
 
@@ -85,7 +85,19 @@ class mPoint { // mPoint with mapping info
 		}
 };
 
+#define MAX_EASE_LEVEL 4
+typedef float (*ease_ptr)(float);
+ease_ptr easers[] = {
+	+[](float t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t; },
+	+[](float t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1; },
+	+[](float t) { return t<.5 ? 8*t*t*t*t : 1-8*powf(t-1,4); },
+	+[](float t) { return t<.5 ? 16*t*t*t*t*t : 1+16*powf(t-1,5); }
+};
+
 class Radterpolator {
+private:
+	int _easelevel=0;
+	easeptr _easefn = NULL;
 public:
 	mPoint *points = new mPoint[POINTS];
 	mPoint *sorted = new mPoint[POINTS];
@@ -117,6 +129,11 @@ public:
 		{ points[T_DOWN].set(x, y, 0, -1, "DOWN"); }
 	void set_center(float x, float y)
 		{ center.set(x, y, 0, 0, "CENTER"); }
+
+	// Set easing function level.
+	// Returns 0 on succes. 1 if level > MAX_EASE_LEVEL, BUT STILL SUCCESS
+	char enable_easing(unsigned char level);
+	float ease_stepped(float val);
 
 	void print(void) {
 		printf("values...\n");
